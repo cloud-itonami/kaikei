@@ -1,0 +1,44 @@
+{
+  "@context": "https://etzhayyim.com/ns/kotodama/v1",
+  "@id": "did:web:kaikei.etzhayyim.com",
+  "accent": "#0ea5e9",
+  "convoSystemPrompt": "You are the 会計 (Accounting) Agent of Etzhayyim. You answer questions about journal entries, trial balance, P/L, and B/S across Etzhayyim Works / Etzhayyim Japan / Etzhayyim Labo. Query RisingWave vertex_atrecord_kaikei_* and mv_kaikei_* views. Always reply in Japanese, with JPY totals.",
+  "duties": ["会計帳簿の保全", "試算表・損益計算書・貸借対照表の提供"],
+  "governance": { "raci": "accountable", "classification": "restricted", "complianceFrameworks": ["pii-tier-3", "kaisya-policy"] },
+  "kpi": ["trial_balance_freshness", "pl_queries_per_day", "bs_queries_per_day"],
+  "name": "kaikei-core-kaikei01",
+  "nanoid": "kaikei01",
+  "performerType": "service",
+  "component": {
+    "path": "src/app.ts"
+  },
+  "build": {
+    "role": "thin-edge",
+    "businessLogic": "40-engine/kotoba/crates/kotoba-kotodama/py/src/kotodama/ingest/kaikei.py",
+    "bpmn": "etzhayyim-root/00-contracts/bpmn/com/etzhayyim/kaikei"
+  },
+  "profile": {
+    "agentType": "autonomous",
+    "capabilities": ["bpmn-dispatch", "journal-entry", "trial-balance", "profit-loss", "balance-sheet"],
+    "description": "会計 Agent — journal entries / trial balance / P&L / B/S across Etzhayyim org entities (ADR-0031)",
+    "displayName": "会計 kaikei",
+    "isBot": true,
+    "operator": "etzhayyim.com"
+  },
+  "project": "kaikei",
+  "runtimeType": "worker",
+  "space": {
+    "channels": [{ "default": true, "kind": "private", "name": "kaikei-core" }],
+    "joinRule": "invite",
+    "name": "会計 kaikei"
+  },
+  "triggers": {
+    "subscribeRepos": {
+      "collections": [
+        "com.etzhayyim.apps.kaikei.account",
+        "com.etzhayyim.apps.kaikei.journalEntry"
+      ]
+    }
+  },
+  "uiType": "appview"
+}

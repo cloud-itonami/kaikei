@@ -1,0 +1,4 @@
+{:schema "etzhayyim.migration/v1"
+ :source {:repository "etzhayyim/root" :revision "c3a74d20d7c65c0b63851fc4f8964402a4733e76" :path "60-apps/etzhayyim-project-kaikei" :tree "78913ea6b6a7115d0b51019667b8009d1c3d84d0" :tracked-files 13 :bytes 16529}
+ :destination {:repository "etzhayyim/com-etzhayyim-app-kaikei"}
+ :identity {:allowed-additions ["README.edn" "migration.edn"]}}
