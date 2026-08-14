@@ -1,0 +1,55 @@
+;; MCP router stub — lets an operator exercise the XRPC proxy without the
+;; upstream AgentGateway router.
+;;
+;; The deployed worker (svelte/src/routes/xrpc/[...path]/+server.ts) POSTs a
+;; JSON-RPC 2.0 `tools/call` envelope to AGENTGATEWAY_MCP_ROUTER_URL and unwraps
+;; `result.structuredContent` from the reply. This stub speaks exactly that and
+;; echoes back what it was asked for, so a 200 from the worker proves the proxy
+;; path — envelope, unwrapping, headers — and nothing about accounting.
+;;
+;; It is a test fixture. It computes no balances and must never stand in for the
+;; real router outside a local run.
+;;
+;;   nbb tools/mcp-router-stub.cljs [port]        ;; default 8798
+;;
+;; See docs/operator-quickstart.md step 4.
+
+(ns mcp-router-stub
+  (:require ["http" :as http]))
+
+(def port (js/parseInt (or (first *command-line-args*) "8798")))
+
+(defn- reply! [res status body]
+  (.writeHead res status #js {"content-type" "application/json"})
+  (.end res (js/JSON.stringify (clj->js body))))
+
+(defn- handle [req res]
+  (if (not= "POST" (.-method req))
+    (reply! res 405 {:error "stub accepts POST only"})
+    (let [chunks (atom "")]
+      (.on req "data" (fn [c] (swap! chunks str c)))
+      (.on req "end"
+           (fn []
+             (let [parsed (try (js->clj (js/JSON.parse @chunks) :keywordize-keys true)
+                               (catch :default _ nil))
+                   {:keys [id params]} parsed
+                   tool (:name params)
+                   args (:arguments params)]
+               (println (str "stub <- tools/call " (pr-str tool) " args=" (js/JSON.stringify (clj->js args))))
+               (if (nil? parsed)
+                 (reply! res 400 {:jsonrpc "2.0" :error {:code -32700 :message "Parse error"}})
+                 (reply! res 200
+                         {:jsonrpc "2.0"
+                          :id (or id "stub")
+                          :result {:structuredContent
+                                   {:stub true
+                                    :tool tool
+                                    :echo (or args {})
+                                    :note "fixture response from tools/mcp-router-stub.cljs — not accounting data"}}}))))))))
+
+(defn -main []
+  (doto (http/createServer handle)
+    (.listen port "127.0.0.1"
+             (fn [] (println (str "mcp-router-stub listening on http://127.0.0.1:" port))))))
+
+(-main)
