@@ -1,0 +1,6 @@
+# Dependency and build output produced by docs/operator-quickstart.md.
+# package-lock.json is deliberately NOT ignored — whether this repo pins its
+# dependencies is an open decision, not something to hide.
+node_modules/
+.svelte-kit/
+.wrangler/
