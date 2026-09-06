@@ -1,11 +1,10 @@
 # kaikei — 会計エージェントの edge surface
 
 **kaikei（会計）は accounting を指す。このリポジトリが持っているのは会計そのもの
-ではなく、会計エージェントの入口 1 枚**——Cloudflare Worker 1 本だけである。
+ではなく、会計エージェントの入口 1 枚**——Cloudflare Worker（assets のみ、動的
+コードは今日は無い）1 本だけである。
 
-仕訳も試算表も P/L も B/S も、**ここには 1 行も無い**。この Worker は
-`POST /xrpc/<nsid>` を上流の MCP router へ JSON-RPC `tools/call` として転送し、
-返ってきた `result.structuredContent` を裸で返す。それが全部。
+仕訳も試算表も P/L も B/S も、**ここには 1 行も無い**。
 
 | | 置き場所 |
 |---|---|
@@ -13,46 +12,82 @@
 | 会計ロジック | `40-engine/kotoba/crates/kotoba-kotodama/py/src/kotodama/ingest/kaikei.py`（**別リポジトリ**） |
 | 業務フロー | `etzhayyim-root/00-contracts/bpmn/com/etzhayyim/kaikei`（**別リポジトリ**） |
 
-## 実測した現在地（2026-08-14）
+## フロントエンドは cljs に移行済み（2026-09-07）
 
-**動く:**
+**Svelte（`svelte/`）は撤去した。** フロントエンドは reagent + re-frame +
+`jp-go-dds`（デジタル庁デザインシステム）の ClojureScript single-page app
+（`appview/kaikei-core-kaikei01/cljs/`、namespace `kaikei.app`）に置き換わった。
+ビルド先は `cljs/public/`（`index.html` + `js/app.js`）で、`wrangler.jsonc` の
+`assets.directory` はここを指す。
 
-- `npm run build`（SvelteKit + `@sveltejs/adapter-cloudflare`）は通り、
-  `wrangler.jsonc` の `main` が指す `svelte/.svelte-kit/cloudflare/_worker.js` を出す。
-- `wrangler dev` でローカルに立ち、`GET /` が状態表示の 1 ページを返す。
-- `OPTIONS /xrpc/<nsid>` → `204` + `access-control-allow-origin: *`。
-- `POST /xrpc/<nsid>` → 到達可能な router を向ければ `200`。転送・封筒・
-  unwrap まで通ることを stub で確認済み（`docs/operator-quickstart.md` 手順 4）。
+**内容は元の Svelte 版と同じ静的な状態表示ページ**（title / project / name /
+kind / 空の routes リスト / 空の runtime-bindings リスト / source path）を、
+re-frame の db + subs 経由で描画するだけ——`wrangler.jsonc` が名乗る
+`APP_CAPABILITIES`（`journal-entry` / `trial-balance` / `profit-loss` /
+`balance-sheet`）をこの移行で実装したわけではない。それらは元から実装が無い
+（このセクション最上部のとおり、会計ロジックは別リポジトリ）。
 
-**動かない:**
+**実測（2026-09-07、この移行で実行したビルド/テスト）:**
 
-- **`etzhayyim.com` のサブドメインが 1 つも解決しない。** `kaikei01` /
-  `kaikei` / `dispatcher` / `mcp` すべて NXDOMAIN（apex だけが引ける）。
-  つまり既定の上流 `https://mcp.etzhayyim.com/...` へは繋がらず、素で
-  `POST /xrpc/<nsid>` を叩くと **`fetch` が uncaught で throw して `500`** になる
-  （`+server.ts` は fetch を try で囲っていない）。**このリポジトリは今日、
-  実インフラに対しては運転できない。**
-- **`GET /health` と `GET /_app/meta` は deploy される成果物には無く、`404`。**
-  実装は `src/app.ts` にあるが、`wrangler.jsonc` の `main` は SvelteKit の
-  ビルド出力を指していて `src/app.ts` ではない。
-- `kotodama.jsonld` が名乗る `did:web:kaikei.etzhayyim.com` は、そのホストが
-  NXDOMAIN なので **解決できない**。
+- `cljs/` で `npm install` → exit 0（129 packages）。
+- `npx shadow-cljs compile app` → exit 0（111 files, 110 compiled, 0 warnings）。
+  出力は `cljs/public/js/app.js`。
+- `npx shadow-cljs compile test && node out/tests.js` → exit 0
+  （6 tests, 14 assertions, 0 failures, 0 errors）。
 
-## XRPC の実装が 2 つある（deploy されるのは片方だけ）
+**UNVERIFIED（この移行では検証していない）:**
 
-同じ proxy が 2 実装あり、**上流も wire protocol も違う**:
+- `wrangler dev` / `wrangler deploy` は実行していない。`wrangler.jsonc` の
+  `assets.directory` を `./cljs/public` に向け、`main` キーを削除した
+  （静的アセットのみを配る Worker になった——後述のとおり動的な Worker
+  スクリプトは today 何も deploy されない）。この config 変更が実際に
+  Cloudflare 上で動くかは未検証。
 
-| | `src/app.ts` | `svelte/src/routes/xrpc/[...path]/+server.ts` |
+## XRPC の実装は 2 つとも残っているが、今日はどちらも deploy されない
+
+移行前は SvelteKit の `+server.ts` が唯一 deploy される実装だった（`wrangler.jsonc`
+の `main` が SvelteKit のビルド出力を指していたため）。この移行で `main` キーを
+削除したので、**今日はこのリポジトリから動的コードは一切 deploy されない**——
+配られるのは cljs の静的アセットだけである。
+
+| | `src/app.ts` | `src/xrpc-mcp-router-proxy.ts`（旧 `svelte/src/routes/xrpc/[...path]/+server.ts`） |
 |---|---|---|
 | 上流 | `DISPATCHER_URL`（既定 `dispatcher.etzhayyim.com`） | `AGENTGATEWAY_MCP_ROUTER_URL`（既定 `mcp.etzhayyim.com`） |
 | 形 | `POST /xrpc/<nsid>` に body を素通し | JSON-RPC 2.0 `tools/call` に包む |
 | `/health` | 有る | 無い |
-| **deploy される** | **されない** | **される** |
+| **今日 deploy されるか** | **されない**（元から） | **されない**（この移行で main が消えたため） |
 
-それでも `src/app.ts` は残っている——`package.json` の `typecheck` が見る唯一の
-ファイルであり、`kotodama.jsonld` の `component.path` が指す先でもある。
-**`src/app.ts` を読んで挙動を推測しない。動いているのは `+server.ts` のほう。**
-どちらを正とするかは未決で、`MIGRATION-TODO.md` の codemod と併せて decide する。
+`src/xrpc-mcp-router-proxy.ts` は Svelte 撤去時に**中身を 1 バイトも変えず**
+`svelte/src/routes/xrpc/[...path]/+server.ts` から移設したもの（ファイル冒頭に
+provenance コメントあり）。`@sveltejs/kit` から import しており、SvelteKit の
+ビルドが無くなった今はそのままでは動かない。`src/app.ts` は元から `main` が
+指していない（`package.json` の `typecheck` が見る唯一のファイルであり、
+`kotodama.jsonld` の `component.path` が指す先ではあるが、deploy 対象ではな
+かった）。**どちらを、あるいは両方を、プレーンな Worker `fetch` ハンドラとして
+再配線するかは未決の製品判断**——このリポジトリはそれを決めず、両方を
+provenance 付きで保存しているだけ。
+
+## 実測した現在地（2026-08-14、SvelteKit 版。今日の cljs 版の実測は上記）
+
+以下は Svelte を撤去する前、SvelteKit 版が deploy されていた頃に実測した内容
+——**歴史として残す**（実装の前提が変わったので今日の挙動の説明としては読まない）。
+
+**動いていた:**
+
+- `npm run build`（SvelteKit + `@sveltejs/adapter-cloudflare`）は通り、
+  `wrangler.jsonc` の `main` が指す `svelte/.svelte-kit/cloudflare/_worker.js` を出した。
+- `wrangler dev` でローカルに立ち、`GET /` が状態表示の 1 ページを返した。
+- `OPTIONS /xrpc/<nsid>` → `204` + `access-control-allow-origin: *`。
+- `POST /xrpc/<nsid>` → 到達可能な router を向ければ `200`。転送・封筒・
+  unwrap まで通ることを stub で確認済みだった。
+
+**動いていなかった（今日も未解消・cljs 版とは無関係に残る事実）:**
+
+- **`etzhayyim.com` のサブドメインが 1 つも解決しない。** `kaikei01` /
+  `kaikei` / `dispatcher` / `mcp` すべて NXDOMAIN（apex だけが引ける、実測
+  2026-08-14。この移行では再測定していない）。
+- `kotodama.jsonld` が名乗る `did:web:kaikei.etzhayyim.com` は、そのホストが
+  NXDOMAIN なので **解決できない**（同上）。
 
 ## 由来と移行状態
 
@@ -69,7 +104,8 @@ Compliance Rider v3.1 を宣言するが、**`CHARTER-RIDER.md` も `LICENSE` �
 
 - 会計の**計算**を探しているなら、ここではない（上表の kotodama ingest）。
 - 会計の**業務フロー定義**を探しているなら、ここではない（上表の BPMN）。
-- ここにあるのは **HTTP 境界と CORS と封筒の変換だけ**。
+- ここにあるのは **HTTP 境界と CORS と封筒の変換の設計だけ**（今日 deploy
+  されているのは静的な状態表示ページのみ、上記のとおり）。
 
 ## 次に読む
 

@@ -1,11 +1,16 @@
 ;; MCP router stub — lets an operator exercise the XRPC proxy without the
 ;; upstream AgentGateway router.
 ;;
-;; The deployed worker (svelte/src/routes/xrpc/[...path]/+server.ts) POSTs a
-;; JSON-RPC 2.0 `tools/call` envelope to AGENTGATEWAY_MCP_ROUTER_URL and unwraps
-;; `result.structuredContent` from the reply. This stub speaks exactly that and
-;; echoes back what it was asked for, so a 200 from the worker proves the proxy
-;; path — envelope, unwrapping, headers — and nothing about accounting.
+;; appview/kaikei-core-kaikei01/src/xrpc-mcp-router-proxy.ts (formerly the
+;; SvelteKit worker svelte/src/routes/xrpc/[...path]/+server.ts, preserved
+;; verbatim during the 2026-09 cljs migration and NOT currently wired to any
+;; deployed entry) POSTs a JSON-RPC 2.0 `tools/call` envelope to
+;; AGENTGATEWAY_MCP_ROUTER_URL and unwraps `result.structuredContent` from the
+;; reply. This stub speaks exactly that and echoes back what it was asked for,
+;; so a 200 from that proxy code proves the proxy path — envelope, unwrapping,
+;; headers — and nothing about accounting. Since the SvelteKit build was
+;; retired, nothing in this repo currently deploys that proxy; this stub still
+;; documents the wire shape it expects if/when it is re-wired.
 ;;
 ;; It is a test fixture. It computes no balances and must never stand in for the
 ;; real router outside a local run.
