@@ -27,15 +27,31 @@
     (ns g (:require [jp-go-dds.page :as page] [\"fs\" :as fs]))
     (def css (fs/readFileSync \"'\"$D\"'/resources/jp_go_dds/dds.css\" \"utf8\"))
     (fs/writeFileSync \"public/index.html\"
-      (page/->page {:title \"kaikei-core-kaikei01\" :lang \"ja\"
+      (page/->page {:title \"kaikei-core-kaikei01\" :lang \"en\"
                     :description \"Kaikei Core Kaikei01 — appview scaffold\"
                     :css css}
                    [:div {:id \"app\"} \"kaikei-core-kaikei01 loading…\"]
+                   [:noscript \"kaikei-core-kaikei01 requires JavaScript.\"]
                    [:script {:src \"js/app.js\"}]))'
 
   jp-go-dds is pinned in this namespace's `deps.edn` at the upstream `main`
   tip as of the day this file was last touched; advance that sha, not this
-  docstring's example, when regenerating later."
+  docstring's example, when regenerating later.
+
+  Two details above are easy to get wrong, and both fail silently — the
+  regenerated page still renders correctly in a browser:
+
+  - `:lang` is \"en\", not \"ja\". An earlier version of this docstring said
+    \"ja\", so running it would have changed the document language.
+  - `->page` does not emit a `<noscript>` fallback; it has to be passed as
+    a child. An earlier version of this docstring omitted it, so running it
+    would have dropped the no-JavaScript message.
+
+  Advancing the pin without re-running this command leaves the shell at the
+  old sha. That happened here: the pin moved to 3950c1ae while the shell
+  stayed at dc4602dc, and comparing the vendored `dds.css` between the two
+  shas does not reveal it — `->page` concatenates `dds.css` with
+  `jp-go-dds.core/ext-css`, and both upstream fixes live in core.cljc."
   (:require [reagent.dom :as rdom]
             [re-frame.core :as rf]
             [jp-go-dds.core :as dds]))
@@ -47,6 +63,16 @@
 ;; re-frame db + subs here so the migration actually exercises the
 ;; event/sub plumbing the workspace standard calls for, without inventing
 ;; app behaviour beyond what the original literal already described.
+;;
+;; `:xrpc?` is the one value that does not match the Svelte literal, which
+;; said true. That was accurate while wrangler.jsonc ran a SvelteKit worker
+;; carrying `svelte/src/routes/xrpc/[...path]/+server.ts`. The migration
+;; dropped the `main` key (no Worker source here calls `env.ASSETS.fetch`),
+;; so only static assets are served and `not_found_handling` is "none" --
+;; `/xrpc/*` now 404s. The handler is preserved, not deleted, at
+;; `../src/xrpc-mcp-router-proxy.ts`; whether to rewire it is an open
+;; product decision this file does not make. A page whose only job is to
+;; describe this surface should not report a route that no longer deploys.
 
 (def default-db
   {:title "Kaikei Core Kaikei01"
@@ -56,7 +82,7 @@
    :route-count 0
    :routes []
    :vars []
-   :xrpc? true
+   :xrpc? false
    :relative-path "appview/kaikei-core-kaikei01/cljs/src/kaikei/app.cljs"})
 
 (rf/reg-event-db
