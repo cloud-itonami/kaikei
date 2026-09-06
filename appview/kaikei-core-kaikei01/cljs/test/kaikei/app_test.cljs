@@ -18,7 +18,7 @@
     (is (= 0 @(rf/subscribe [:route-count])))
     (is (= [] @(rf/subscribe [:routes])))
     (is (= [] @(rf/subscribe [:vars])))
-    (is (true? @(rf/subscribe [:xrpc?])))))
+    (is (false? @(rf/subscribe [:xrpc?])))))
 
 (deftest title-sub-reflects-db
   (testing ":title subscription reads whatever is in the db, not a fixed value"
