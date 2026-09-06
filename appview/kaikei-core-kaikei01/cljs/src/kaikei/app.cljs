@@ -9,7 +9,33 @@
   accounting functionality (journal entries / trial balance / P&L / B/S) that
   was not already there — wrangler.jsonc's `APP_CAPABILITIES` names those, but
   this repo has never implemented them; see the repo README for what this
-  surface actually is (an HTTP boundary, not the accounting engine)."
+  surface actually is (an HTTP boundary, not the accounting engine).
+
+  `public/index.html` is a static shell produced once, at authoring time, by
+  `jp-go-dds.page/->page` run via nbb (JVM-free — see the CLAUDE.md runtime
+  priority order). This namespace only requires `jp-go-dds.core`; the browser
+  bundle does not need `jp-go-dds.page` at runtime. Regenerate the shell (e.g.
+  if jp-go-dds's `dds.css` or `page/->page` change) by running this from
+  `appview/kaikei-core-kaikei01/cljs`, with `$R` pointing at the superproject
+  root:
+
+    R=$R
+    D=$R/orgs/kotoba-lang/jp-go-digital-design-system
+    H=$R/orgs/kotoba-lang/html
+    C=$R/orgs/kotoba-lang/css
+    nbb --classpath \"$D/src:$D/resources:$H/src:$C/src\" -e '
+    (ns g (:require [jp-go-dds.page :as page] [\"fs\" :as fs]))
+    (def css (fs/readFileSync \"'\"$D\"'/resources/jp_go_dds/dds.css\" \"utf8\"))
+    (fs/writeFileSync \"public/index.html\"
+      (page/->page {:title \"kaikei-core-kaikei01\" :lang \"ja\"
+                    :description \"Kaikei Core Kaikei01 — appview scaffold\"
+                    :css css}
+                   [:div {:id \"app\"} \"kaikei-core-kaikei01 loading…\"]
+                   [:script {:src \"js/app.js\"}]))'
+
+  jp-go-dds is pinned in this namespace's `deps.edn` at the upstream `main`
+  tip as of the day this file was last touched; advance that sha, not this
+  docstring's example, when regenerating later."
   (:require [reagent.dom :as rdom]
             [re-frame.core :as rf]
             [jp-go-dds.core :as dds]))
