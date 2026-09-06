@@ -1,3 +1,12 @@
+// SVELTEKIT-BACKEND-PRESERVED: moved out of svelte/ during the cljs migration; not wired.
+//
+// Provenance: svelte/src/routes/xrpc/[...path]/+server.ts
+// This was the XRPC dispatcher the SvelteKit build deployed. It imports from
+// '@sveltejs/kit' and uses SvelteKit's RequestHandler/RequestEvent types, so it
+// does NOT run as-is now that the SvelteKit build is gone. Whether to re-wire it
+// onto a plain Worker entry is an undecided product question, deliberately left
+// to a human — this migration only preserves it.
+
 import { json, type RequestEvent } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
