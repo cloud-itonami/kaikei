@@ -15,7 +15,7 @@
 ;; It is a test fixture. It computes no balances and must never stand in for the
 ;; real router outside a local run.
 ;;
-;;   nbb tools/mcp-router-stub.cljk [port]        ;; default 8798
+;;   kbb --backend sci tools/mcp-router-stub.cljk [port]        ;; default 8798
 ;;
 ;; See docs/operator-quickstart.md step 4.
 
