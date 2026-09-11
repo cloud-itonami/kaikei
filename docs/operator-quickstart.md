@@ -30,7 +30,7 @@ cd kaikei
 ```bash
 cd appview/kaikei-core-kaikei01/cljs
 npm install
-npm run build          # shadow-cljs compile app
+npm run build          # amu compile --target wasm32-browser app
 ```
 
 実測（2026-09-07）: `npm install` は exit 0（129 packages）。ビルドは
@@ -41,7 +41,7 @@ exit 0、`public/js/app.js` が生成される。
 （superproject の CLAUDE.md、同時 1 本）:
 
 ```bash
-node <superproject>/scripts/resource-guard.mjs run build -- npx shadow-cljs compile app
+node <superproject>/scripts/resource-guard.mjs run build -- amu compile --target wasm32-browser app
 ```
 
 `exit 2` は「lock held、ビルド失敗ではない」——45 秒待って再試行する
@@ -50,7 +50,7 @@ node <superproject>/scripts/resource-guard.mjs run build -- npx shadow-cljs comp
 ## 3. テストを走らせる
 
 ```bash
-npm test                # shadow-cljs compile test && node out/tests.js
+npm test                # amu compile --target wasm32-browser test && node out/tests.js
 ```
 
 実測（2026-09-07）: `Ran 6 tests containing 14 assertions. 0 failures, 0 errors.`

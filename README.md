@@ -30,9 +30,9 @@ re-frame の db + subs 経由で描画するだけ——`wrangler.jsonc` が名�
 **実測（2026-09-07、この移行で実行したビルド/テスト）:**
 
 - `cljs/` で `npm install` → exit 0（129 packages）。
-- `npx shadow-cljs compile app` → exit 0（111 files, 110 compiled, 0 warnings）。
+- `amu compile --target wasm32-browser app` → exit 0（111 files, 110 compiled, 0 warnings）。
   出力は `cljs/public/js/app.js`。
-- `npx shadow-cljs compile test && node out/tests.js` → exit 0
+- `amu compile --target wasm32-browser test && node out/tests.js` → exit 0
   （6 tests, 14 assertions, 0 failures, 0 errors）。
 
 **UNVERIFIED（この移行では検証していない）:**
