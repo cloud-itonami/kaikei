@@ -88,7 +88,7 @@ Cloudflare の `assets` binding や `not_found_handling` の挙動はこれで�
 再配線するかは未決の製品判断——`README.md` の「XRPC の実装は 2 つとも残って
 いるが、今日はどちらも deploy されない」を参照。
 
-`tools/mcp-router-stub.cljs` は `src/xrpc-mcp-router-proxy.ts` が期待する wire
+`tools/mcp-router-stub.cljk` は `src/xrpc-mcp-router-proxy.ts` が期待する wire
 形式（JSON-RPC 2.0 `tools/call` → `result.structuredContent` の unwrap）を
 記録したテスト用スタブとして残しているが、**その proxy 自体が今は何にも
 配線されていないので、このリポジトリの現在の動作を検証する手段ではない**。

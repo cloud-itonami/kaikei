@@ -83,7 +83,7 @@
    :routes []
    :vars []
    :xrpc? false
-   :relative-path "appview/kaikei-core-kaikei01/cljs/src/kaikei/app.cljs"})
+   :relative-path "appview/kaikei-core-kaikei01/cljs/src/kaikei/app.cljk"})
 
 (rf/reg-event-db
  :initialize-db
