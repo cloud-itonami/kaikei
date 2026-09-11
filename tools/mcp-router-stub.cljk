@@ -15,7 +15,7 @@
 ;; It is a test fixture. It computes no balances and must never stand in for the
 ;; real router outside a local run.
 ;;
-;;   nbb tools/mcp-router-stub.cljs [port]        ;; default 8798
+;;   nbb tools/mcp-router-stub.cljk [port]        ;; default 8798
 ;;
 ;; See docs/operator-quickstart.md step 4.
 
@@ -50,7 +50,7 @@
                                    {:stub true
                                     :tool tool
                                     :echo (or args {})
-                                    :note "fixture response from tools/mcp-router-stub.cljs — not accounting data"}}}))))))))
+                                    :note "fixture response from tools/mcp-router-stub.cljk — not accounting data"}}}))))))))
 
 (defn -main []
   (doto (http/createServer handle)
