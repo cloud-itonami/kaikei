@@ -38,7 +38,7 @@ npm run build          # amu compile --target wasm32-browser app
 exit 0、`public/js/app.js` が生成される。
 
 ⚠ このワークスペースでビルドを回すときは resource governor を通す
-（superproject の CLAUDE.md、同時 1 本）:
+（superproject の AGENTS.md、同時 1 本）:
 
 ```bash
 node <superproject>/scripts/resource-guard.mjs run build -- amu compile --target wasm32-browser app

@@ -12,7 +12,7 @@
   surface actually is (an HTTP boundary, not the accounting engine).
 
   `public/index.html` is a static shell produced once, at authoring time, by
-  `jp-go-dds.page/->page` run via nbb (JVM-free — see the CLAUDE.md runtime
+  `jp-go-dds.page/->page` run via nbb (JVM-free — see the AGENTS.md runtime
   priority order). This namespace only requires `jp-go-dds.core`; the browser
   bundle does not need `jp-go-dds.page` at runtime. Regenerate the shell (e.g.
   if jp-go-dds's `dds.css` or `page/->page` change) by running this from
