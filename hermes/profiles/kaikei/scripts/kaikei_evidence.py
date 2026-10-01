@@ -3,8 +3,8 @@
 REFUSED + exit 2 if the repo checkout is unreadable (never a silent green)."""
 import json, os, subprocess, sys, datetime
 
-ROOT = "~/github/com-junkawasaki"
-REPO = os.path.join(ROOT, "orgs/cloud-itonami/kaikei")
+ROOT = os.path.expanduser("~/github/cloud-itonami")
+REPO = os.path.join(ROOT, "kaikei")
 HOME = os.path.expanduser("~/.hermes/profiles/kaikei")
 LEDGER = os.path.join(HOME, "workspace", "kaikei-ledger.jsonl")
 
